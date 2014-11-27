@@ -1,17 +1,54 @@
 #include <netinet/in.h>
 #include <strings.h>
+#include <string.h>
 #include <unistd.h>
 #include <netdb.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
+#include <getopt.h>
+#include <fcntl.h>
+#include "../serialize/serialize.h"
 
-int main() {
+int main(int argc, char* argv[]) {
     struct sockaddr_in socket_info;
     char hostname[257];
     struct hostent* host;
     int socket_handle;
-    int port = 5000;
+    int port = 0;
+    int c;
+    char* mount = NULL;
+
+    while (1) {
+        static struct option long_options[] = {
+            {"port", required_argument, 0, 'p'},
+            {"mount", required_argument, 0, 'm'},
+            {0, 0, 0, 0}
+        };
+        int option_index = 0;
+
+        c = getopt_long_only(argc, argv, "p:m:", long_options, &option_index);
+
+        if (c == -1)
+            break;
+        switch (c) {
+            case 'p':
+                port = atoi(optarg);
+                break;
+            case 'm':
+                mount = optarg;
+                break;
+            case '?':
+                break;
+            default:
+                exit(EXIT_FAILURE);
+        }
+    }
+
+    if (port == 0 || mount == NULL) {
+        printf("Not enough args\n");
+        exit(EXIT_FAILURE);
+    }
 
     bzero(&socket_info, sizeof(struct sockaddr_in));
 
@@ -54,7 +91,40 @@ int main() {
                 close(socket_conn);
                 exit(EXIT_FAILURE);
             case 0:
-                //do stuff
+                while (1) {
+                    char buf[4];
+                    int rc = recv(socket_conn, buf, 4, 0);
+                    if (rc < 4)
+                        exit(EXIT_FAILURE);
+                    int size = deserialize_int(buf);
+                    char* buffer = malloc(size);
+                    rc = recv(socket_conn, buffer, size, 0);
+                    if (rc < 4)
+                        exit(EXIT_FAILURE);
+                    int id = buffer[0];
+                    char* filename;
+                    int fd;
+                    byte_buffer* response;
+                    switch (id) {
+                        case 0:
+                            filename = malloc(strlen(mount) + size + 1);
+                            strcpy(filename, mount);
+                            strcat(filename, "/");
+                            strncat(filename, &buffer[1], size - 1);
+                            fd = open(filename, O_CREAT);
+                            init_buf(9, response);
+                            put_int(5, response);
+                            put(0, response);
+                            put_int(fd, response);
+                            send(socket_handle, response->buffer, 9, 0);
+                            break;
+                        case 1:
+                        case 2:
+                        case 3:
+                        case 4:
+                            printf("ayy,lmao\n");
+                    }
+                }
                 exit(EXIT_SUCCESS);
             default:
                 close(socket_conn);

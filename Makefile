@@ -12,10 +12,10 @@ CFLAGS = -Wall -g
 all: client-app server-app
 
 client-app: client.o serialize.o clientapp.o
-	$(CC) $(CFLAGS) -o client-app clientapp.o client.o serialize.o
+	$(CC) $(CFLAGS) -o clientSNFS clientapp.o client.o serialize.o
 
 server-app: server.o serialize.o
-	$(CC) $(CFLAGS) -o server-app server.o serialize.o
+	$(CC) $(CFLAGS) -o serverSNFS server.o serialize.o
 
 clientapp.o: client.o client/clientapp.c
 	$(CC) $(CFLAGS) -c client/clientapp.c -o clientapp.o
@@ -30,4 +30,4 @@ serialize.o: serialize/serialize.c serialize/serialize.h
 	$(CC) $(CFLAGS) -Iserialize -c serialize/serialize.c
 
 clean:
-	rm -f *.o server-app client-app
+	rm -f *.o serverSNFS clientSNFS

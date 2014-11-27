@@ -38,3 +38,13 @@ void put(int byte, byte_buffer* buffer) {
     buf[buffer->offset] = (char)byte;
     buffer->offset++;
 }
+
+int deserialize_int(void* buffer) {
+    char* buf = (char*)buffer;
+    int ret = 0;
+    ret += buf[0] << 24;
+    ret += buf[1] << 16;
+    ret += buf[2] << 8;
+    ret += buf[3];
+    return ret;
+}
