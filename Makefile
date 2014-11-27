@@ -11,11 +11,14 @@ CFLAGS = -Wall -g
 
 all: client-app server-app
 
-client-app: client.o serialize.o
-	$(CC) $(CFLAGS) -o client-app client.o serialize.o
+client-app: client.o serialize.o clientapp.o
+	$(CC) $(CFLAGS) -o client-app clientapp.o client.o serialize.o
 
 server-app: server.o serialize.o
 	$(CC) $(CFLAGS) -o server-app server.o serialize.o
+
+clientapp.o: client.o client/clientapp.c
+	$(CC) $(CFLAGS) -c client/clientapp.c -o clientapp.o
 
 client.o: client/clientSNFS.c client/clientSNFS.h
 	$(CC) $(CFLAGS) -Iclient -Iserialize -c client/clientSNFS.c -o client.o
