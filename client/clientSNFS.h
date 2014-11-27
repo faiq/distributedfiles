@@ -1,5 +1,5 @@
-#ifndef HEADER_FILE
-#define HEADER_FILE
+#ifndef CLIENT_H
+#define CLIENT_H
 #include <time.h>
 typedef struct fileStat {
   int file_size;

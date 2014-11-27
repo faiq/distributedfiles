@@ -5,6 +5,7 @@
 #include <netinet/ip.h>
 #include <sys/types.h>
 #include <errno.h>
+#include "../serialze/serialize.h"
 
 #define OPEN '0' 
 #define READ '1'
@@ -55,22 +56,20 @@ void setServer(char * serverIP, int port) {
 }
 
 int openFile (char * name) {  
-	int payloadSize = strlen (name);
-  unsigned char buffer[payloadSize + 1 + 4]; //payloadSize + ID + INT for length
-	//first encode size into buffer 
-	int t = payloadSize + 1;
-	serializeInt (buffer, t); // total size of the message going along
-	buffer[4] = OPEN;
-	printf ("printing buffer %s\n", buffer);
-  strncpy (&buffer[5], name, strlen (buffer)); // copy message to the next part of the buffer we send
-	printf ("printing buffer %s\n", buffer);
-
-  int n =  write (socketFd, buffer, strlen (buffer)); //write file name over socket
+	int payloadSize = strlen (name) + 1;
+	byte_buffer * send;
+	init_buf (payloadSize + 4, send); //add 4 to handle the int for size
+	put_int (payloadSize, send); //send size
+	put (OPEN, send);  
+	put_string (send, name);
+	printf ("printing buffer %s\n", send->buffer);
+	 
+	int n =  write (socketFd, send->buffer, strlen (send->buffer)); //write file name over socket
   if (n < 0 )  {
     printf("error creating client socket, error%d\n",errno);
     perror("meaning:"); exit(0);
   } 
-
+	char buffer[256];
   memset (&buffer, 0, strlen (buffer));
 
   int k;
