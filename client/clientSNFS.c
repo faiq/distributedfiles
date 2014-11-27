@@ -59,10 +59,10 @@ int openFile (char * name) {
     perror("meaning:"); exit(0);
   } 
 
-  memset (buffer, 0, strlen (buffer));
-  int k = -1;
-  while (k == -1) 
-    k = read (socketFd, buffer, strlen (buffer));
+  memset (&buffer, 0, strlen (buffer));
+
+  int k;
+	k = read (socketFd, buffer, 255);
 
   if (k < 0 )  {
     printf("error creating client socket, error%d\n",errno);
@@ -70,7 +70,6 @@ int openFile (char * name) {
   } 
   
   int ret = atoi (buffer); 
-  printf ("this miraculously worked here is ret %d\n", ret);
   return ret;
 } 
 
