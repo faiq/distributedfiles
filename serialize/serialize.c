@@ -1,5 +1,6 @@
 #include <string.h>
 #include <arpa/inet.h>
+#include <stdlib.h>
 #include "serialize.h"
 
 void init_buf(size_t size, byte_buffer* buffer) {
@@ -25,6 +26,7 @@ void put_bytes(void* val, size_t size, byte_buffer* buffer) {
     int i;
     int off = buffer->offset;
     char* buf = (char*)buffer->buffer;
+    char* str = (char*)val;
     for (i = off; i < size + off; i++) {
         buf[i] = str[i];
     }
