@@ -15,9 +15,11 @@ static int host2IpAddr(char *anIpName){
   struct hostent *hostEntry;
   struct in_addr *scratch;
  
-  if ((hostEntry = gethostbyname ( anIpName )) == (struct hostent*) NULL)
-    return 0;
- 
+  if ((hostEntry = gethostbyname ( anIpName )) == (struct hostent*) NULL){ 
+    printf("error gettig host from the provided string, error%d\n",errno);
+    perror("meaning:"); exit(0);
+  }
+
   scratch = (struct in_addr *) hostEntry->h_addr;
  
   return (ntohl(scratch->s_addr));
@@ -37,11 +39,41 @@ void setServer(char * serverIP, int port) {
   servAddr.sin_addr.s_addr = htonl (host2IpAddr(serverIP));
   servAddr.sin_port = htons (port);
   servAddr.sin_family = AF_INET;
-  int con = connect (socketFd, (struct sockaddr *)&servAddr, sizeof (serv_ad));
+
+  int con = connect (socketFd, (struct sockaddr *)&servAddr, sizeof (servAddr));
   
   if (con < 0) {
     printf("error creating client socket, error%d\n",errno);
     perror("meaning:"); exit(0);
   }
   
+}
+
+int openFile (char * name) {  
+  char buffer[256];    
+  strncpy (buffer, name, 255);
+
+  int n =  write (socketFd, buffer, strlen (buffer)); //write file name over socket
+  if (n < 0 )  {
+    printf("error creating client socket, error%d\n",errno);
+    perror("meaning:"); exit(0);
+  } 
+
+  memset (buffer, 0, strlen (buffer));
+  int k = -1;
+  while (k == -1) 
+    k = read (socketFd, buffer, strlen (buffer));
+
+  if (k < 0 )  {
+    printf("error creating client socket, error%d\n",errno);
+    perror("meaning:"); exit(0);
+  } 
+  
+  int ret = atoi (buffer); 
+  printf ("this miraculously worked here is ret %d\n", ret);
+  return ret;
+} 
+
+int readFile (int fd, void * buffer) { 
+
 }
