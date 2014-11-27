@@ -1,11 +1,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <netdb.h>
+#include <string.h>
+#include <unistd.h>
 #include <sys/socket.h> 
 #include <netinet/ip.h>
 #include <sys/types.h>
 #include <errno.h>
-#include "../serialze/serialize.h"
+#include "serialize.h"
 
 #define OPEN '0' 
 #define READ '1'
@@ -23,7 +25,7 @@ static int host2IpAddr(char *anIpName){
  
   if ((hostEntry = gethostbyname ( anIpName )) == (struct hostent*) NULL){ 
     printf("error gettig host from the provided string, error%d\n",errno);
-    perror("meaning:"); exit(0);
+    perror("meaning:"); exit(0);
   }
 
   scratch = (struct in_addr *) hostEntry->h_addr;
@@ -38,7 +40,7 @@ void setServer(char * serverIP, int port) {
 
   if (socketFd < 0) { 
     printf("error creating client socket, error%d\n",errno);
-    perror("meaning:"); exit(0);
+    perror("meaning:"); exit(0);
   }
   
   memset (&servAddr, 0, sizeof (servAddr));
@@ -50,7 +52,7 @@ void setServer(char * serverIP, int port) {
   
   if (con < 0) {
     printf("error creating client socket, error%d\n",errno);
-    perror("meaning:"); exit(0);
+    perror("meaning:"); exit(0);
   }
   
 }
@@ -67,7 +69,7 @@ int openFile (char * name) {
 	int n =  write (socketFd, send->buffer, strlen (send->buffer)); //write file name over socket
   if (n < 0 )  {
     printf("error creating client socket, error%d\n",errno);
-    perror("meaning:"); exit(0);
+    perror("meaning:"); exit(0);
   } 
 	char buffer[256];
   memset (&buffer, 0, strlen (buffer));
@@ -77,7 +79,7 @@ int openFile (char * name) {
 
   if (k < 0 )  {
     printf("error creating client socket, error%d\n",errno);
-    perror("meaning:"); exit(0);
+    perror("meaning:"); exit(0);
   } 
   
   int ret = atoi (buffer); 

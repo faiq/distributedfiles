@@ -4,16 +4,22 @@
 # Parameters to control Makefile operation
 
 CC = gcc
-CFLAGS = -ansi -pedantic -Wall -g
+CFLAGS = -Wall -g
 
 # ****************************************************
 # Entries to bring the executable up to date
 
-app: client.o serialize.o
-	$(CC) $(CFLAGS) -o app client.o serialize.o
+client-app: client.o serialize.o
+	$(CC) $(CFLAGS) -o client-app client.o serialize.o
 
-client.o: clientSNFS.c clientSNFS.h
-	$(CC) $(CFLAGS) -c clientSNFS.c 
+server-app: server.o serialize.o
+	$(CC) $(CFLAGS) -o server-app server.o serialize.o
 
-serialize.o: serialize.c serialize.h
-	$(CC) $(CFLAGS) -c ../serialize/serialize.c
+client.o: client/clientSNFS.c client/clientSNFS.h
+	$(CC) $(CFLAGS) -Iclient -Iserialize -c client/clientSNFS.c -o client.o
+
+server.o: server/server.c server/server.h
+	$(CC) $(CFLAGS) -Iserver -Iserialize -c server/server.c -o server.o
+
+serialize.o: serialize/serialize.c serialize/serialize.h
+	$(CC) $(CFLAGS) -Iserialize -c serialize/serialize.c
