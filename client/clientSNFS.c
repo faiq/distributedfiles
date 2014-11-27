@@ -36,6 +36,8 @@ static int host2IpAddr(char *anIpName){
    
 }
 
+
+int socketFd; 
 void setServer(char * serverIP, int port) {
   bzero(fds, 256);
   total_open = 0;
