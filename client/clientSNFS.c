@@ -6,6 +6,11 @@
 #include <sys/types.h>
 #include <errno.h>
 
+#define OPEN '0' 
+#define READ '1'
+#define WRITE '2' 
+#define STAT '3' 
+#define CLOSE '4' 
 
 int socketFd; //global to save the file descriptor for the socket
 struct sockaddr_in servAddr; //global to save address of the server
@@ -50,8 +55,15 @@ void setServer(char * serverIP, int port) {
 }
 
 int openFile (char * name) {  
-  char buffer[256];    
-  strncpy (buffer, name, 255);
+	int payloadSize = strlen (name);
+  unsigned char buffer[payloadSize + 1 + 4]; //payloadSize + ID + INT for length
+	//first encode size into buffer 
+	int t = payloadSize + 1;
+	serializeInt (buffer, t); // total size of the message going along
+	buffer[4] = OPEN;
+	printf ("printing buffer %s\n", buffer);
+  strncpy (&buffer[5], name, strlen (buffer)); // copy message to the next part of the buffer we send
+	printf ("printing buffer %s\n", buffer);
 
   int n =  write (socketFd, buffer, strlen (buffer)); //write file name over socket
   if (n < 0 )  {
