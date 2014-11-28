@@ -104,7 +104,9 @@ int main(int argc, char* argv[]) {
                     int id = buffer[0];
                     char* filename;
                     int fd;
-                    byte_buffer* response;
+                    int length;
+                    void* file;
+                    byte_buffer response;
                     switch (id) {
                         case 0:
                             filename = malloc(strlen(mount) + size + 1);
@@ -112,17 +114,50 @@ int main(int argc, char* argv[]) {
                             strcat(filename, "/");
                             strncat(filename, &buffer[1], size - 1);
                             fd = open(filename, O_CREAT);
-                            init_buf(9, response);
-                            put_int(5, response);
-                            put(0, response);
-                            put_int(fd, response);
-                            send(socket_handle, response->buffer, 9, 0);
+                            init_buf(9, &response);
+                            put_int(5, &response);
+                            put(0, &response);
+                            put_int(fd, &response);
+                            send(socket_handle, response.buffer, 9, 0);
+                            free(response.buffer);
                             break;
                         case 1:
+                            fd = deserialize_int(&buffer[1]);
+                            length = lseek(fd, 0, SEEK_END);
+                            lseek(fd, 0, 0);
+                            file = malloc(length);
+                            read(fd, file, length);
+                            init_buf(5+length, &response);
+                            put_int(1+length, &response);
+                            put(1, &response);
+                            put_bytes(file, length, &response);
+                            send(socket_handle, response.buffer, 5+length, 0);
+                            free(response.buffer);
+                            free(file);
+                            break;
                         case 2:
+                            fd = deserialize_int(&buffer[1]);
+                            length = write(fd, &buffer[5], size - 5);
+                            init_buf(9, &response);
+                            put_int(5, &response);
+                            put(2, &response);
+                            put_int(length, &response);
+                            send(socket_handle, response.buffer, 9, 0);
+                            free(response.buffer);
+                            break;
                         case 3:
+                            printf("Not implemnted\n");
+                            break;
                         case 4:
-                            printf("ayy,lmao\n");
+                            fd = deserialize_int(&buffer[1]);
+                            length = close(fd);
+                            init_buf(9, &response);
+                            put_int(5, &response);
+                            put(4, &response);
+                            put_int(length, &response);
+                            send(socket_handle, response.buffer, 9, 0);
+                            free(response.buffer);
+                            break;
                     }
                 }
                 exit(EXIT_SUCCESS);
