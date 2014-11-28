@@ -9,11 +9,11 @@
 #include <errno.h>
 #include "serialize.h"
 
-#define OPEN '0' 
-#define READ '1'
-#define WRITE '2' 
-#define STAT '3' 
-#define CLOSE '4' 
+#define OPEN 0 
+#define READ 1
+#define WRITE 2 
+#define STAT 3 
+#define CLOSE 4 
 
 int socketFd; //global to save the file descriptor for the socket
 struct sockaddr_in servAddr; //global to save address of the server
@@ -58,17 +58,17 @@ void setServer(char * serverIP, int port) {
 }
 
 int openFile (char * name) {  
-  int payloadSize = strlen (name) + 1; //we send name + 1 byte for id
+  int payloadSize =  sizeof(char) * strlen (name) + sizeof(char); //we send name + 1 byte for id
   byte_buffer send; 
 
-  init_buf (payloadSize + 4, &send); //add 4 to handle the int for size
+  init_buf (payloadSize + sizeof(int), &send); //add 4 to handle the int for size
   put_int (payloadSize, &send); //send size
   put (OPEN, &send);
   put_string (name, &send);
 
-	int n =  write (socketFd, send.buffer, strlen ((char *) send.buffer)); //write file name over socket
+	int n =  write (socketFd, send.buffer, payloadSize + sizeof(int)); //write file name over socket
   if (n < 0 )  {
-    printf("error creating client socket, error%d\n",errno);
+    printf("error writing in socket, error%d\n",errno);
     perror("meaning:"); exit(0);
   } 
   byte_buffer recv; 
@@ -78,7 +78,7 @@ int openFile (char * name) {
   k = read (socketFd, recv.buffer, 5);
 
   if (k < 0 ) {
-    printf("error creating client socket, error%d\n",errno);
+    printf("error reading from socket, error%d\n",errno);
     perror("meaning:"); exit(0);
   } 
   
@@ -100,7 +100,7 @@ int readFile (int fd, void * buffer) {
 
   int n =  write (socketFd, send.buffer, strlen ((char *) send.buffer));//write file name over socket
   if (n < 0 )  {
-    printf("error creating client socket, error%d\n",errno);
+    printf("error writing to socket, error%d\n",errno);
     perror("meaning:"); exit(0);
   } 
 
@@ -109,7 +109,7 @@ int readFile (int fd, void * buffer) {
   k = recv (socketFd, buf, 1029, 0); //recieve a maximum of 1029 4 size, 1 id, 1024 bytes
 
   if (k < 0 ) {
-    printf("error creating client socket, error%d\n",errno);
+    printf("error reading from socket, error%d\n",errno);
     perror("meaning:"); exit(0);
   } 
 
