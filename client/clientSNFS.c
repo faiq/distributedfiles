@@ -72,11 +72,11 @@ int openFile (char * name) {
     perror("meaning:"); exit(0);
   } 
   byte_buffer recv; 
-  init_buf (sizeof (char) * 5, &recv); 
+  init_buf (sizeof (char) * 9, &recv); 
 
   int k;
-  k = read (socketFd, recv.buffer, 5);
-
+  k = read (socketFd, recv.buffer, 9);
+  
   if (k < 0 ) {
     printf("error reading from socket, error%d\n",errno);
     perror("meaning:"); exit(0);
@@ -98,26 +98,40 @@ int readFile (int fd, void * buffer) {
   put (READ, &send);
   put_int (fd, &send);
 
-  int n =  write (socketFd, send.buffer, strlen ((char *) send.buffer));//write file name over socket
+  int n =  write (socketFd, send.buffer, 2 * sizeof(int) + sizeof(char));//write file name over socket
   if (n < 0 )  {
     printf("error writing to socket, error%d\n",errno);
     perror("meaning:"); exit(0);
   } 
 
   int k;
-  char buf[1029]; //<size><id><payload>
-  k = recv (socketFd, buf, 1029, 0); //recieve a maximum of 1029 4 size, 1 id, 1024 bytes
+  char buf[4]; //<size><id><payload>
+  k = recv (socketFd, buf, 4, 0); //recieve a maximum of 1029 = 4 size, 1 id, 1024 bytes
 
   if (k < 0 ) {
     printf("error reading from socket, error%d\n",errno);
     perror("meaning:"); exit(0);
   } 
+  ////////////stupid/////////
+  int j; 
+  char buff;
+  j = recv (socketFd, &buff, 1, 0); // send extra read for id to make the next read to be all our data (for ease)  
 
-  //parse the size of bytes first
-  char temp[sizeof(int)];
-  memcpy (temp, buf, sizeof(int));
-  int ret =  deserialize_int (temp);
-  ret--; //subtract one extra byte for the id
-  memcpy (buffer, buf + 5 * sizeof(char), sizeof(char) * ret); //this is the message it lives in the fifth space over copy it into buffer
-  return ret; 
+  if (j < 0 ) {
+    printf("error reading from socket, error%d\n",errno);
+    perror("meaning:"); exit(0);
+  } 
+ /////////stupid////////////// 
+  int l;
+  int size = deserialize_int(buf) - 1; //take out an extra byte for the id
+  char buffr[size]; 
+  l = recv (socketFd, buffr, size, 0);
+  
+  if (l < 0 ) {
+    printf("error reading from socket, error%d\n",errno);
+    perror("meaning:"); exit(0);
+  } 
+
+  memcpy (buffer, buffr, size); 
+  return size;  
 }
