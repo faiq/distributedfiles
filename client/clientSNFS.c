@@ -9,11 +9,11 @@
 #include <errno.h>
 #include "serialize.h"
 
-#define OPEN '0' 
-#define READ '1'
-#define WRITE '2' 
-#define STAT '3' 
-#define CLOSE '4' 
+#define OPEN 0 
+#define READ 1
+#define WRITE 2 
+#define STAT 3 
+#define CLOSE 4 
 
 int socketFd; //global to save the file descriptor for the socket
 struct sockaddr_in servAddr; //global to save address of the server

@@ -42,6 +42,5 @@ int deserialize_int(char * buffer) {
     ret += buffer[1] << 16;
     ret += buffer[2] << 8;
     ret += buffer[3];
-    ret = ntohl(ret); 
     return ret;
 }
