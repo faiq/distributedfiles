@@ -7,22 +7,22 @@
 void init_buf(size_t size, byte_buffer* buffer) {
     buffer->offset = 0;
     buffer->buffer = malloc(size);
-    bzero (buffer->buffer, size); //zero out buffer for good measure 
+    memset(buffer->buffer,0,size);
 }
 
 void put_int(int val, byte_buffer* buffer) {
-    int off = buffer->offset;
-    uint32_t sending = htonl(val);
-    buffer->buffer[0+off] = sending >> 24;
-    buffer->buffer[1+off] = sending >> 16;
-    buffer->buffer[2+off] = sending >> 8;
-    buffer->buffer[3+off] = sending; 
+    memcpy(buffer->buffer + buffer->offset,&val,sizeof(unsigned int));
+    //printf("this is what i put in %d\n",deserialize_int(buffer->buffer)); this was a test to see if it works, works on my end
     buffer->offset += 4;
 }
 
 void put_string(char* str, byte_buffer* buffer) {
-    put_bytes(str, strlen(str), buffer);
+    //put_bytes(str, strlen(str), buffer);
+    memcpy (buffer->buffer + buffer->offset, str, strlen (str));
+    buffer->offset += strlen (str);
 }
+
+//we don't really need this function anymore 
 void put_bytes(void* val, size_t size, byte_buffer* buffer) {
     int i;
     char* str = (char*)val;
