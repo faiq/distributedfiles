@@ -11,6 +11,7 @@ void init_buf(size_t size, byte_buffer* buffer) {
 }
 
 void put_int(int val, byte_buffer* buffer) {
+    val = htonl(val);
     memcpy(buffer->buffer + buffer->offset,&val,sizeof(unsigned int));
     //printf("this is what i put in %d\n",deserialize_int(buffer->buffer)); this was a test to see if it works, works on my end
     buffer->offset += 4;
