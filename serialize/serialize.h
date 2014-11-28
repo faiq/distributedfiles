@@ -2,7 +2,7 @@
 #define SERIAL_H
 typedef struct byte_buffer {
     int offset;
-    void* buffer;
+    char* buffer;
 } byte_buffer;
 void init_buf(size_t, byte_buffer*);
 void put_int(int, byte_buffer*);
