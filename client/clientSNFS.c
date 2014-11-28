@@ -69,7 +69,7 @@ int openFile (char * name) {
   int i; 
   char * buff = (char *) send.buffer;
   
-  for (i = 0; i < send.offset; i++) printf("char printing %c\n", buff[i]);	
+  for (i = 0; i < send.offset; i++) printf("char printing %c\n", (char ) buff[i]);	
 
  
 	int n =  write (socketFd, send.buffer, strlen ((char *) send.buffer)); //write file name over socket
@@ -77,18 +77,20 @@ int openFile (char * name) {
     printf("error creating client socket, error%d\n",errno);
     perror("meaning:"); exit(0);
   } 
-	char buffer[256];
-  memset (&buffer, 0, strlen (buffer));
+  byte_buffer recv; 
+  init_buf (sizeof (char) * 5, &recv); 
 
   int k;
-	k = read (socketFd, buffer, 255);
+	k = read (socketFd, recv.buffer, 5);
 
   if (k < 0 )  {
     printf("error creating client socket, error%d\n",errno);
     perror("meaning:"); exit(0);
   } 
-  
-  int ret = atoi (buffer); 
+  //size messageid payload <- we need to read payload @ pos 5 
+  void * buffer = malloc(sizeof (int));
+  memcpy (buffer, &recv.buffer[5], 4);
+  int ret = deserialize_int(buffer);
   return ret;
 } 
 

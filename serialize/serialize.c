@@ -6,9 +6,8 @@
 
 void init_buf(size_t size, byte_buffer* buffer) {
     buffer->offset = 0;
-    printf("offset, set\n"); 
     buffer->buffer = malloc(size);
-    printf("buffer set \n");
+    bzero (buffer->buffer, size); //zero out buffer for good measure 
 }
 
 void put_int(int val, byte_buffer* buffer) {
@@ -49,5 +48,6 @@ int deserialize_int(void* buffer) {
     ret += buf[1] << 16;
     ret += buf[2] << 8;
     ret += buf[3];
+    ret = ntohl(ret); 
     return ret;
 }

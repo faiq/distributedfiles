@@ -4,7 +4,7 @@ var server = net.createServer(function(c) { //'connection' listener
   console.log('server connected')
   c.on('data', function (data) { 
     console.log(data)
-    c.write("12", function () { 
+    c.write("11", function () { 
 			console.log(arguments)
 		})
   })
