@@ -76,7 +76,7 @@ int openFile (char * name) {
 
   int k;
   k = read (socketFd, recv.buffer, 5);
-
+  printf("%d\n", k);
   if (k < 0 ) {
     printf("error reading from socket, error%d\n",errno);
     perror("meaning:"); exit(0);
