@@ -9,4 +9,5 @@ int main (int argc, char ** argv)  {
   int y = readFile (x, buff);
   printf ("this is y %d\n", y);
   printf ("this is buff %s", buff);
+  return 0;
 }
