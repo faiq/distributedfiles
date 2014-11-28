@@ -58,13 +58,16 @@ void setServer(char * serverIP, int port) {
 }
 
 int openFile (char * name) {  
-	int payloadSize = strlen (name) + 1;
-	byte_buffer * send;
-	init_buf (payloadSize + 4, send); //add 4 to handle the int for size
-	put_int (payloadSize, send); //send size
-	put (OPEN, send);  
-	put_string (send, name);
-	printf ("printing buffer %s\n", send->buffer);
+  int payloadSize = strlen (name) + 1;
+  byte_buffer * send = malloc(sizeof(byte_buffer));
+  printf("this is payloadSize %d\n", payloadSize);
+  init_buf (payloadSize + 4, send); //add 4 to handle the int for size
+  printf ("printing buffer %s\n", send->buffer);
+  put_int (payloadSize, send); //send size
+  printf ("printing buffer %s\n", send->buffer);
+  put (OPEN, send);  
+  put_string (name, send);
+  printf ("printing buffer %s\n", send->buffer);
 	 
 	int n =  write (socketFd, send->buffer, strlen (send->buffer)); //write file name over socket
   if (n < 0 )  {

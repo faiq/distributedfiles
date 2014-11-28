@@ -2,10 +2,13 @@
 #include <arpa/inet.h>
 #include <stdlib.h>
 #include "serialize.h"
+#include <stdio.h> 
 
 void init_buf(size_t size, byte_buffer* buffer) {
     buffer->offset = 0;
+    printf("offset, set\n"); 
     buffer->buffer = malloc(size);
+    printf("buffer set \n");
 }
 
 void put_int(int val, byte_buffer* buffer) {
