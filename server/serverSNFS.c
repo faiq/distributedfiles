@@ -105,7 +105,7 @@ int main(int argc, char* argv[]) {
                     if (rc < 4)
                         exit(EXIT_FAILURE);
                     int size = deserialize_int(buf);
-                    printf("Size of message: %d", size);
+                    printf("Size of message: %d\n", size);
                     char* buffer = malloc(size);
                     rc = recv(socket_conn, buffer, size, 0);
                     if (rc < size)
@@ -123,11 +123,13 @@ int main(int argc, char* argv[]) {
                             strcpy(filename, mount);
                             strcat(filename, "/");
                             strncat(filename, &buffer[1], size - 1);
-                            fd = open(filename, O_CREAT);
+                            printf("Opening file: %s\n", filename);
+                            fd = open(filename, O_CREAT, S_IRWXU);
                             init_buf(9, &response);
                             put_int(5, &response);
                             put(0, &response);
                             put_int(fd, &response);
+                            printf("Sending fd: %d\n", fd);
                             send(socket_handle, response.buffer, 9, 0);
                             free(response.buffer);
                             break;
