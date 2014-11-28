@@ -115,6 +115,7 @@ int main(int argc, char* argv[]) {
                     char* filename;
                     int fd;
                     int length;
+                    int sent;
                     void* file;
                     byte_buffer response;
                     switch (id) {
@@ -130,7 +131,8 @@ int main(int argc, char* argv[]) {
                             put(0, &response);
                             put_int(fd, &response);
                             printf("Sending fd: %d\n", fd);
-                            send(socket_handle, response.buffer, 9, 0);
+                            sent = send(socket_conn, response.buffer, 9, 0);
+                            printf("Sent %d bytes\n", sent);
                             free(response.buffer);
                             break;
                         case 1:
@@ -143,7 +145,7 @@ int main(int argc, char* argv[]) {
                             put_int(1+length, &response);
                             put(1, &response);
                             put_bytes(file, length, &response);
-                            send(socket_handle, response.buffer, 5+length, 0);
+                            send(socket_conn, response.buffer, 5+length, 0);
                             free(response.buffer);
                             free(file);
                             break;
@@ -154,7 +156,7 @@ int main(int argc, char* argv[]) {
                             put_int(5, &response);
                             put(2, &response);
                             put_int(length, &response);
-                            send(socket_handle, response.buffer, 9, 0);
+                            send(socket_conn, response.buffer, 9, 0);
                             free(response.buffer);
                             break;
                         case 3:
@@ -167,7 +169,7 @@ int main(int argc, char* argv[]) {
                             put_int(5, &response);
                             put(4, &response);
                             put_int(length, &response);
-                            send(socket_handle, response.buffer, 9, 0);
+                            send(socket_conn, response.buffer, 9, 0);
                             free(response.buffer);
                             break;
                     }
