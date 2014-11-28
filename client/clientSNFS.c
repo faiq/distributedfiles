@@ -72,10 +72,10 @@ int openFile (char * name) {
     perror("meaning:"); exit(0);
   } 
   byte_buffer recv; 
-  init_buf (sizeof (char) * 5, &recv); 
+  init_buf (sizeof (char) * 9, &recv); 
 
   int k;
-  k = read (socketFd, recv.buffer, 5);
+  k = read (socketFd, recv.buffer, 9);
   printf("%d\n", k);
   if (k < 0 ) {
     printf("error reading from socket, error%d\n",errno);
