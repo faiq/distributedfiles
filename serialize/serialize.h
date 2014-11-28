@@ -9,5 +9,5 @@ void put_int(int, byte_buffer*);
 void put_string(char*, byte_buffer*);
 void put_bytes(void*, size_t, byte_buffer*);
 void put(int, byte_buffer*);
-int deserialize_int(void*);
+int deserialize_int(char*);
 #endif
