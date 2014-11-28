@@ -99,11 +99,11 @@ int main(int argc, char* argv[]) {
             case 0:
                 while (1) {
                     char buf[4];
-                    printf("Trying to recieve bytes\n");
+                    //printf("Trying to recieve bytes\n");
                     int rc = recv(socket_conn, buf, sizeof(buf), 0);
-                    printf("Recieved %d bytes\n", rc);
+                    //printf("Recieved %d bytes\n", rc);
                     if (rc < 4)
-                        exit(EXIT_FAILURE);
+                        continue;
                     int size = deserialize_int(buf);
                     printf("Size of message: %d\n", size);
                     char* buffer = malloc(size);
