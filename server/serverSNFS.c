@@ -97,6 +97,7 @@ int main(int argc, char* argv[]) {
                     if (rc < 4)
                         exit(EXIT_FAILURE);
                     int size = deserialize_int(buf);
+                    printf ("this is size %d\n", size);
                     char* buffer = malloc(size);
                     rc = recv(socket_conn, buffer, size, 0);
                     if (rc < 4)

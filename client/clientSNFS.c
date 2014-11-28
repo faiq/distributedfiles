@@ -62,10 +62,12 @@ int openFile (char * name) {
   byte_buffer send; 
 
   init_buf (payloadSize + 4, &send); //add 4 to handle the int for size
+  printf ("init buff\n");
   put_int (payloadSize, &send); //send size
   put (OPEN, &send);
   put_string (name, &send);
-  
+  printf ("done buff\n");
+
   int i; 
   char * buff = (char *) send.buffer;
   
@@ -81,9 +83,9 @@ int openFile (char * name) {
   init_buf (sizeof (char) * 5, &recv); 
 
   int k;
-	k = read (socketFd, recv.buffer, 5);
+  k = read (socketFd, recv.buffer, 5);
 
-  if (k < 0 )  {
+  if (k < 0 ) {
     printf("error creating client socket, error%d\n",errno);
     perror("meaning:"); exit(0);
   } 
