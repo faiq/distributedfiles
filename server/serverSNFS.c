@@ -49,6 +49,9 @@ int main(int argc, char* argv[]) {
         printf("Not enough args\n");
         exit(EXIT_FAILURE);
     }
+    printf("Starting server...\n");
+    printf("port: %d\n", port);
+    printf("mount: %s\n", mount);
 
     bzero(&socket_info, sizeof(struct sockaddr_in));
 
@@ -72,8 +75,10 @@ int main(int argc, char* argv[]) {
         perror("bind");
         exit(EXIT_FAILURE);
     }
+    printf("Bound socket\n");
 
     listen(socket_handle, 1);
+    printf("Listening on socket\n");
 
     int socket_conn;
     while (1) {
@@ -84,6 +89,7 @@ int main(int argc, char* argv[]) {
             perror("accept");
             exit(EXIT_FAILURE);
         }
+        printf("Accepted connection: %d\n", socket_conn);
         switch(fork()) {
             case -1:
                 perror("fork");
@@ -93,16 +99,19 @@ int main(int argc, char* argv[]) {
             case 0:
                 while (1) {
                     char buf[4];
-                    int rc = recv(socket_conn, buf, 4, 0);
+                    printf("Trying to recieve bytes\n");
+                    int rc = recv(socket_conn, buf, sizeof(buf), 0);
+                    printf("Recieved %d bytes\n", rc);
                     if (rc < 4)
                         exit(EXIT_FAILURE);
                     int size = deserialize_int(buf);
-                    printf ("this is size %d\n", size);
+                    printf("Size of message: %d", size);
                     char* buffer = malloc(size);
                     rc = recv(socket_conn, buffer, size, 0);
-                    if (rc < 4)
+                    if (rc < size)
                         exit(EXIT_FAILURE);
                     int id = buffer[0];
+                    printf("Message id: %d\n", id);
                     char* filename;
                     int fd;
                     int length;
@@ -163,7 +172,6 @@ int main(int argc, char* argv[]) {
                 }
                 exit(EXIT_SUCCESS);
             default:
-                close(socket_conn);
                 continue;
         }
     }
