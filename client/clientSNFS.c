@@ -62,18 +62,10 @@ int openFile (char * name) {
   byte_buffer send; 
 
   init_buf (payloadSize + 4, &send); //add 4 to handle the int for size
-  printf ("init buff\n");
   put_int (payloadSize, &send); //send size
   put (OPEN, &send);
   put_string (name, &send);
-  printf ("done buff\n");
 
-  int i; 
-  char * buff = (char *) send.buffer;
-  
-  for (i = 0; i < send.offset; i++) printf("char printing %c\n", (char ) buff[i]);	
-
- 
 	int n =  write (socketFd, send.buffer, strlen ((char *) send.buffer)); //write file name over socket
   if (n < 0 )  {
     printf("error creating client socket, error%d\n",errno);
@@ -89,13 +81,43 @@ int openFile (char * name) {
     printf("error creating client socket, error%d\n",errno);
     perror("meaning:"); exit(0);
   } 
-  //size messageid payload <- we need to read payload @ pos 5 
-  void * buffer = malloc(sizeof (int));
-  memcpy (buffer, &recv.buffer[5], 4);
+  
+  char * buffer = malloc(sizeof (int));
+  memcpy (buffer, &recv.buffer[5], sizeof(int));
   int ret = deserialize_int(buffer);
+  free(buffer);
   return ret;
 } 
 
 int readFile (int fd, void * buffer) { 
+  int payloadSize = sizeof(int) + sizeof(char); //msg = <size><id><fd>
+  byte_buffer send; 
+  
+  init_buf (payloadSize + sizeof(int), &send); //add the extra int bc we dont include size in paylad
+  put_int (payloadSize, &send);
+  put (READ, &send);
+  put_int (fd, &send);
 
+  int n =  write (socketFd, send.buffer, strlen ((char *) send.buffer));//write file name over socket
+  if (n < 0 )  {
+    printf("error creating client socket, error%d\n",errno);
+    perror("meaning:"); exit(0);
+  } 
+
+  int k;
+  char buf[1029]; //<size><id><payload>
+  k = recv (socketFd, buf, 1029, 0); //recieve a maximum of 1029 4 size, 1 id, 1024 bytes
+
+  if (k < 0 ) {
+    printf("error creating client socket, error%d\n",errno);
+    perror("meaning:"); exit(0);
+  } 
+
+  //parse the size of bytes first
+  char temp[sizeof(int)];
+  memcpy (temp, buf, sizeof(int));
+  int ret =  deserialize_int (temp);
+  ret--; //subtract one extra byte for the id
+  memcpy (buffer, buf + 5 * sizeof(char), sizeof(char) * ret); //this is the message it lives in the fifth space over copy it into buffer
+  return ret; 
 }
