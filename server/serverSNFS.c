@@ -8,6 +8,7 @@
 #include <errno.h>
 #include <getopt.h>
 #include <fcntl.h>
+#include <sys/stat.h>
 #include "../serialize/serialize.h"
 
 int main(int argc, char* argv[]) {
@@ -116,6 +117,7 @@ int main(int argc, char* argv[]) {
                     int fd;
                     int length;
                     int sent;
+                    struct stat stat_buf;
                     void* file;
                     byte_buffer response;
                     switch (id) {
@@ -160,7 +162,20 @@ int main(int argc, char* argv[]) {
                             free(response.buffer);
                             break;
                         case 3:
-                            printf("Not implemnted\n");
+                            filename = malloc(strlen(mount) + size + 1);
+                            strcpy(filename, mount);
+                            strcat(filename, "/");
+                            strncat(filename, &buffer[1], size - 1);
+                            stat(filename, &stat_buf);
+                            init_buf(21, &response);
+                            put_int(17, &response);
+                            put(3, &response);
+                            put_int(stat_buf.st_size, &response);
+                            put_int(stat_buf.st_ctim.tv_sec, &response);
+                            put_int(stat_buf.st_atim.tv_sec, &response);
+                            put_int(stat_buf.st_mtim.tv_sec, &response);
+                            send(socket_conn, response.buffer, 21, 0);
+                            free(response.buffer);
                             break;
                         case 4:
                             fd = deserialize_int(&buffer[1]);
