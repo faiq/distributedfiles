@@ -152,7 +152,9 @@ int main(int argc, char* argv[]) {
                             free(file);
                             break;
                         case 2:
+                            printf ("here!\n");
                             fd = deserialize_int(&buffer[1]);
+                            printf ("this is fd %d\n", fd);
                             length = write(fd, &buffer[5], size - 5);
                             init_buf(9, &response);
                             put_int(5, &response);

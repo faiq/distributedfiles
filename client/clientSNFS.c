@@ -142,11 +142,12 @@ int writeFile(int fd, void * buffer) {
   byte_buffer send; 
   
   init_buf (payloadSize + sizeof (int), &send); 
-  put_int (payloadSize, &send);
+  put_int (payloadSize, &send); //sizefirst
   put (WRITE, &send); 
-  put_string ((char *) buffer, &send); 
+  put_int (fd, &send); 
+  put_string ((char *) buffer, &send);
 
-  int n =  write (socketFd, send.buffer, sizeof (int) + chars * sizeof (char) + sizeof (char) + sizeof (int));
+  int n =  write (socketFd, send.buffer, sizeof (int) + chars * sizeof (char) + sizeof (char) + sizeof (int)); //size <file><id><fd> 
 
   if (n < 0 )  {
     printf("error writing to socket, error%d\n",errno);
