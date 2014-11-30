@@ -10,6 +10,7 @@ typedef struct fileStat {
 void setServer(char *, int);
 int openFile(char *);
 int readFile(int, void *); 
+int writeFile(int, void *);
 int statFile(int, fileStat *);  
 int closeFile(int);
 #endif

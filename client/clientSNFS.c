@@ -105,14 +105,14 @@ int readFile (int fd, void * buffer) {
   } 
 
   int k;
-  char buf[4]; //<size><id><payload>
-  k = recv (socketFd, buf, 4, 0); //recieve a maximum of 1029 = 4 size, 1 id, 1024 bytes
+  char buf[4]; 
+  k = recv (socketFd, buf, 4, 0); 
 
   if (k < 0 ) {
     printf("error reading from socket, error%d\n",errno);
     perror("meaning:"); exit(0);
   } 
-  ////////////stupid/////////
+  
   int j; 
   char buff;
   j = recv (socketFd, &buff, 1, 0); // send extra read for id to make the next read to be all our data (for ease)  
@@ -121,7 +121,7 @@ int readFile (int fd, void * buffer) {
     printf("error reading from socket, error%d\n",errno);
     perror("meaning:"); exit(0);
   } 
- /////////stupid////////////// 
+ 
   int l;
   int size = deserialize_int(buf) - 1; //take out an extra byte for the id
   char buffr[size]; 
@@ -134,4 +134,44 @@ int readFile (int fd, void * buffer) {
 
   memcpy (buffer, buffr, size); 
   return size;  
+}
+
+int writeFile(int fd, void * buffer) { 
+  int chars = (int) strlen ( (char *) buffer);
+  int payloadSize = sizeof (int) + chars * sizeof (char) + sizeof (char); //pass fd, char, contents
+  byte_buffer send; 
+  
+  init_buf (payloadSize + sizeof (int), &send); 
+  put_int (payloadSize, &send);
+  put (WRITE, &send); 
+  put_string ((char *) buffer, &send); 
+
+  int n =  write (socketFd, send.buffer, sizeof (int) + chars * sizeof (char) + sizeof (char) + sizeof (int));
+
+  if (n < 0 )  {
+    printf("error writing to socket, error%d\n",errno);
+    perror("meaning:"); exit(0);
+  } 
+  printf ("this is n %d\n", n);
+
+  int k;
+  char buf[4]; 
+  k = recv (socketFd, buf, 4, 0); 
+  printf ("this is k in write %d\n", k);
+  if (k < 0 ) {
+    printf("error reading from socket, error%d\n",errno);
+    perror("meaning:"); exit(0);
+  } 
+  
+  int j; 
+  char buff;
+  j = recv (socketFd, &buff, 1, 0); // send extra read for id to make the next read to be all our data (for ease)  
+  printf ("this is j should be 1 %d\n", j); 
+  if (j < 0 ) {
+    printf("error reading from socket, error%d\n",errno);
+    perror("meaning:"); exit(0);
+  } 
+
+  int size = deserialize_int(buf) - 1; //take out an extra byte for the id
+  return size;
 }
