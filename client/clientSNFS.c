@@ -110,7 +110,7 @@ int readFile (int fd, void * buffer) {
   int k;
   char buf[4]; 
   k = recv (socketFd, buf, 4, 0); 
-
+  printf ("this is the size of the read response should be atleast 5 %d\n", k); 
   if (k < 0 ) {
     printf("error reading from socket, error%d\n",errno);
     perror("meaning:"); exit(0);
@@ -119,7 +119,7 @@ int readFile (int fd, void * buffer) {
   int j; 
   char buff;
   j = recv (socketFd, &buff, 1, 0); // send extra read for id to make the next read to be all our data (for ease)  
-
+  printf ("this is the id of the read res %d\n", j); 
   if (j < 0 ) {
     printf("error reading from socket, error%d\n",errno);
     perror("meaning:"); exit(0);
@@ -127,6 +127,7 @@ int readFile (int fd, void * buffer) {
  
   int l;
   int size = deserialize_int(buf) - 1; //take out an extra byte for the id
+  printf ("this is the size of the response %d\n", size);
   char buffr[size]; 
   l = recv (socketFd, buffr, size, 0);
   
