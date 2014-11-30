@@ -127,7 +127,7 @@ int main(int argc, char* argv[]) {
                             strcat(filename, "/");
                             strncat(filename, &buffer[1], size - 1);
                             printf("Opening file: %s\n", filename);
-                            fd = open(filename, O_CREAT, S_IRWXU);
+                            fd = open(filename, O_CREAT, S_IRWXU | S_IRWXG | S_IRWXO);
                             init_buf(9, &response);
                             put_int(5, &response);
                             put(0, &response);
@@ -138,29 +138,38 @@ int main(int argc, char* argv[]) {
                             free(response.buffer);
                             break;
                         case 1:
+                            printf("Got read message\n");
                             fd = deserialize_int(&buffer[1]);
                             length = lseek(fd, 0, SEEK_END);
                             lseek(fd, 0, 0);
                             file = malloc(length);
+                            printf ("Reading from file: %d\n", fd);
                             read(fd, file, length);
                             init_buf(5+length, &response);
                             put_int(1+length, &response);
                             put(1, &response);
                             put_bytes(file, length, &response);
-                            send(socket_conn, response.buffer, 5+length, 0);
+                            printf("Sending bytes: %d\n", 5+length);
+                            sent = send(socket_conn, response.buffer, 5+length, 0);
+                            printf("Sent %d bytes\n", sent);
                             free(response.buffer);
                             free(file);
                             break;
                         case 2:
-                            printf ("here!\n");
+                            printf ("Got write message\n");
                             fd = deserialize_int(&buffer[1]);
-                            printf ("this is fd %d\n", fd);
-                            length = write(fd, &buffer[5], size - 5);
+                            printf ("Writing to file: %d\n", fd);
+                            if ((length = write(fd, &buffer[5], size - 5)) < 0) {
+                                perror("Error: Write");
+                                break;
+                            }
                             init_buf(9, &response);
                             put_int(5, &response);
                             put(2, &response);
                             put_int(length, &response);
-                            send(socket_conn, response.buffer, 9, 0);
+                            printf("Sending length: %d\n", length);
+                            sent = send(socket_conn, response.buffer, 9, 0);
+                            printf("Sent %d bytes\n", sent);
                             free(response.buffer);
                             break;
                         case 3:
