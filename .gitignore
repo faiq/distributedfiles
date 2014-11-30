@@ -1,0 +1,6 @@
+*.sw*
+*.o
+.clang_complete
+serverSNFS
+clientSNFS
+tmp
