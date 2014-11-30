@@ -1,0 +1,1 @@
+How can I find out the size of a file? I opened with an application written in C. I would like to know the size
