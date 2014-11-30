@@ -199,9 +199,11 @@ int main(int argc, char* argv[]) {
                             send(socket_conn, response.buffer, 9, 0);
                             free(response.buffer);
                             break;
+                        case 5:
+                            close(socket_conn);
+                            exit(EXIT_SUCCESS);
                     }
                 }
-                exit(EXIT_SUCCESS);
             default:
                 continue;
         }

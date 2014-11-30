@@ -17,6 +17,8 @@
 
 int socketFd; //global to save the file descriptor for the socket
 struct sockaddr_in servAddr; //global to save address of the server
+int fds[256];
+int total_open;
 
 static int host2IpAddr(char *anIpName){
 
@@ -35,6 +37,8 @@ static int host2IpAddr(char *anIpName){
 }
 
 void setServer(char * serverIP, int port) {
+  bzero(fds, 256);
+  total_open = 0;
 
   socketFd = socket (AF_INET, SOCK_STREAM, 0); //create a new socket connection
 
@@ -47,17 +51,14 @@ void setServer(char * serverIP, int port) {
   servAddr.sin_addr.s_addr = htonl (host2IpAddr(serverIP));
   servAddr.sin_port = htons (port);
   servAddr.sin_family = AF_INET;
-
-  int con = connect (socketFd, (struct sockaddr *)&servAddr, sizeof (servAddr));
-  
-  if (con < 0) {
-    printf("error creating client socket, error%d\n",errno);
-    perror("meaning:"); exit(0);
-  }
-  
 }
 
 int openFile (char * name) {  
+  if (total_open == 0 && (con = connect(socketFd, (struct sockaddr*)&servAddr, sizeof(servAddr))) < 0) {
+    printf("error creating client socket, error%d\n",errno);
+    perror("meaning:"); exit(0);
+  }
+
   int payloadSize =  sizeof(char) * strlen (name) + sizeof(char); //we send name + 1 byte for id
   byte_buffer send; 
 
@@ -86,6 +87,14 @@ int openFile (char * name) {
   memcpy (buffer, &recv.buffer[5], sizeof(int));
   int ret = deserialize_int(buffer);
   free(buffer);
+  int i;
+  for (i = 0; i < 256; i++) {
+    if (fds[i] == 0) {
+      fds[i] = ret;
+      total_open++;
+      break;
+    }
+  }
   return ret;
 } 
 
@@ -164,4 +173,37 @@ int writeFile(int fd, void * buffer) {
 
   int size = deserialize_int(&buf[1]) - 1; //take out an extra byte for the id
   return size;
+}
+
+int closeFile(int fd) {
+    int i;
+    for (i = 0; i < 256; i++) {
+        if (fds[i] == fd) {
+            fds[i] = 0;
+            total_open--;
+            break;
+        }
+    }
+    byte_buffer send;
+    init_buf(9, &send);
+    put_int(5, &send);
+    put(4, &send);
+    put_int(fd, &send);
+    write(socketFd, send.buffer, 9);
+    char size_buf[4];
+    recv(socketFd, size_buf, 4, 0);
+    int size = deserialize_int(size_buf);
+    char* buffer = malloc(size);
+    recv(socketFd, buffer, size, 0);
+    int response = deserialize_int(&buffer[1]);
+    free(send.buffer);
+    if (total_open == 0) {
+        init_buf(5, &send);
+        put_int(1, &send);
+        put(5, &send);
+        write(socketFd, send.buffer, 5);
+        free(send.buffer);
+        close(socketFd);
+    }
+    return response;
 }
