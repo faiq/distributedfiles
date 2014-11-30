@@ -127,7 +127,7 @@ int main(int argc, char* argv[]) {
                             strcat(filename, "/");
                             strncat(filename, &buffer[1], size - 1);
                             printf("Opening file: %s\n", filename);
-                            fd = open(filename, O_CREAT, S_IRWXU | S_IRWXG | S_IRWXO);
+                            fd = open(filename, O_CREAT | O_RDWR, S_IRWXU | S_IRWXG | S_IRWXO);
                             init_buf(9, &response);
                             put_int(5, &response);
                             put(0, &response);
@@ -163,6 +163,7 @@ int main(int argc, char* argv[]) {
                                 perror("Error: Write");
                                 break;
                             }
+                            printf ("here yo \n"); 
                             init_buf(9, &response);
                             put_int(5, &response);
                             put(2, &response);

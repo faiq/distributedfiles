@@ -147,32 +147,21 @@ int writeFile(int fd, void * buffer) {
   put_int (fd, &send); 
   put_string ((char *) buffer, &send);
 
-  int n =  write (socketFd, send.buffer, sizeof (int) + chars * sizeof (char) + sizeof (char) + sizeof (int)); //size <file><id><fd> 
-
+  int n =  write (socketFd, send.buffer, 4 + 4 + 1 + chars); //size <file><id><fd> 
+  printf ("this is n %d\n", n);
   if (n < 0 )  {
     printf("error writing to socket, error%d\n",errno);
     perror("meaning:"); exit(0);
   } 
-  printf ("this is n %d\n", n);
 
   int k;
-  char buf[4]; 
-  k = recv (socketFd, buf, 4, 0); 
-  printf ("this is k in write %d\n", k);
+  char buf[5]; 
+  k = read (socketFd, buf, 5); 
   if (k < 0 ) {
     printf("error reading from socket, error%d\n",errno);
     perror("meaning:"); exit(0);
   } 
-  
-  int j; 
-  char buff;
-  j = recv (socketFd, &buff, 1, 0); // send extra read for id to make the next read to be all our data (for ease)  
-  printf ("this is j should be 1 %d\n", j); 
-  if (j < 0 ) {
-    printf("error reading from socket, error%d\n",errno);
-    perror("meaning:"); exit(0);
-  } 
 
-  int size = deserialize_int(buf) - 1; //take out an extra byte for the id
+  int size = deserialize_int(&buf[1]) - 1; //take out an extra byte for the id
   return size;
 }
