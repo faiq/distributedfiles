@@ -8,6 +8,7 @@
 #include <sys/types.h>
 #include <errno.h>
 #include "serialize.h"
+#include "clientSNFS.h"
 
 #define OPEN 0 
 #define READ 1
@@ -148,7 +149,6 @@ int writeFile(int fd, void * buffer) {
   put_string ((char *) buffer, &send);
 
   int n =  write (socketFd, send.buffer, sizeof (int) * 2 + sizeof (char) * (chars + 1)); //size <file><id><fd> 
-  printf ("this is n %d\n", n);
   if (n < 0 )  {
     printf("error writing to socket, error%d\n",errno);
     perror("meaning:"); exit(0);
@@ -164,4 +164,77 @@ int writeFile(int fd, void * buffer) {
 
   int size = deserialize_int(&buf[1]) - 1; //take out an extra byte for the id
   return size;
+}
+
+int statFile (int fd, fileStat * buf) { 
+  int payloadSize = sizeof(int) + sizeof(char); //msg = <size><id><fd>
+  byte_buffer send; 
+
+  init_buf (payloadSize + sizeof(int), &send);
+  put_int (payloadSize, &send);
+  put (STAT, &send);
+  put_int (fd, &send);
+
+  int n =  write (socketFd, send.buffer, sizeof (int) * 2 + sizeof (char)); //size <file><id><fd> 
+  if (n < 0 )  {
+    printf("error writing to socket, error%d\n",errno);
+    perror("meaning:"); exit(0);
+  }
+
+  int k;                                              /*gets the size of the response*/ 
+  char resSize[4]; 
+  k = recv (socketFd, resSize, 4, 0); 
+  if (k < 0 ) {
+    printf("error reading from socket, error%d\n",errno);
+    perror("meaning:"); exit(0);
+  } 
+  
+  int j; 
+  char resId; 
+  j = recv (socketFd, &resId, 1, 0); 
+  if (j < 0 ) {
+    printf("error reading from socket, error%d\n",errno);
+    perror("meaning:"); exit(0);
+  } 
+  
+  int l; 
+  char statSize [4]; 
+  l = recv (socketFd, statSize, 4, 0);
+  if (l < 0 ) {
+    printf("error reading from socket, error%d\n",errno);
+    perror("meaning:"); exit(0);
+  } 
+
+  int x; 
+  char statCreate [4];
+  x = recv (socketFd, statCreate, 4, 0); 
+  if (x < 0 ) {
+    printf("error reading from socket, error%d\n",errno);
+    perror("meaning:"); exit(0);
+  }
+  
+  int y; 
+  char statAccess [4]; 
+  y = recv (socketFd, statAccess, 4, 0); 
+  if (y < 0 ) {
+    printf("error reading from socket, error%d\n",errno);
+    perror("meaning:"); exit(0);
+  }
+
+  int z; 
+  char statMod [4]; 
+  z = recv (socketFd, statMod, 4, 0); 
+  if (z < 0 ) {
+    printf("error reading from socket, error%d\n",errno);
+    perror("meaning:"); exit(0);
+  }
+ 
+  buf->file_size =  deserialize_int (statSize);
+  buf->creation_time = deserialize_int (statCreate); 
+  buf->access_time = deserialize_int (statAccess); 
+  buf->mod_time = deserialize_int (statMod);
+  
+  printf("%d, %ld, %ld, %ld\n", buf->file_size, buf->creation_time, buf->access_time, buf->mod_time);
+
+  return 1;
 }
