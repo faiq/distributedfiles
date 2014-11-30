@@ -156,7 +156,7 @@ int writeFile(int fd, void * buffer) {
   put_int (fd, &send); 
   put_string ((char *) buffer, &send);
 
-  int n =  write (socketFd, send.buffer, 4 + 4 + 1 + chars); //size <file><id><fd> 
+  int n =  write (socketFd, send.buffer, sizeof (int) * 2 + sizeof (char) * (chars + 1)); //size <file><id><fd> 
   printf ("this is n %d\n", n);
   if (n < 0 )  {
     printf("error writing to socket, error%d\n",errno);
