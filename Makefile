@@ -23,7 +23,7 @@ clientapp.o: client.o client/clientapp.c
 client.o: client/clientSNFS.c client/clientSNFS.h
 	$(CC) $(CFLAGS) -Iclient -Iserialize -c client/clientSNFS.c -o client.o
 
-server.o: server/serverSNFS.c server/serverSNFS.h
+server.o: server/serverSNFS.c
 	$(CC) $(CFLAGS) -Iserver -Iserialize -c server/serverSNFS.c -o server.o
 
 serialize.o: serialize/serialize.c serialize/serialize.h
