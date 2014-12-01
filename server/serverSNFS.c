@@ -53,6 +53,7 @@ int main(int argc, char* argv[]) {
     printf("Starting server...\n");
     printf("port: %d\n", port);
     printf("mount: %s\n", mount);
+    mkdir(mount, S_IRWXU | S_IRWXG | S_IRWXO);
 
     bzero(&socket_info, sizeof(struct sockaddr_in));
 
@@ -178,11 +179,8 @@ int main(int argc, char* argv[]) {
                             free(response.buffer);
                             break;
                         case 3:
-                            filename = malloc(strlen(mount) + size + 1);
-                            strcpy(filename, mount);
-                            strcat(filename, "/");
-                            strncat(filename, &buffer[1], size - 1);
-                            stat(filename, &stat_buf);
+                            fd = deserialize_int(&buffer[1]);
+                            fstat(fd, &stat_buf);
                             init_buf(21, &response);
                             put_int(17, &response);
                             put(3, &response);
