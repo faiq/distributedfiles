@@ -11,5 +11,6 @@ int main (int argc, char ** argv)  {
   int z = writeFile (x, "How can I find out the size of a file? I opened with an application written in C. I would like to know the size");
   fileStat stuff; 
   int a = statFile(x, &stuff);
+  closeFile(x);
   return 0;
 }

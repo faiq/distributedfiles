@@ -282,6 +282,7 @@ int closeFile(int fd) {
       put(5, &send);
       write(socketFd, send.buffer, 5);
       free(send.buffer);
+      printf("closing socket connection\n"); 
       close(socketFd);
   }
   return response;
