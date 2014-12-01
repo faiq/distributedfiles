@@ -57,6 +57,7 @@ void setServer(char * serverIP, int port) {
 }
 
 int openFile (char * name) {  
+  int con;
   if (total_open == 0 && (con = connect(socketFd, (struct sockaddr*)&servAddr, sizeof(servAddr))) < 0) {
     printf("error creating client socket, error%d\n",errno);
     perror("meaning:"); exit(0);
@@ -282,6 +283,7 @@ int closeFile(int fd) {
       put(5, &send);
       write(socketFd, send.buffer, 5);
       free(send.buffer);
+      printf("closing socket connection\n"); 
       close(socketFd);
   }
   return response;
