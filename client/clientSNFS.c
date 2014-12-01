@@ -138,15 +138,16 @@ int readFile (int fd, void * buffer) {
   int size = deserialize_int(buf) - 1; //take out an extra byte for the id
   printf ("this is the size of the response %d\n", size);
   char buffr[size]; 
-  l = recv (socketFd, buffr, size, 0);
-  
-  if (l < 0 ) {
-    printf("error reading from socket, error%d\n",errno);
-    perror("meaning:"); exit(0);
-  } 
+  if (size) { 
+    l = recv (socketFd, buffr, size, 0);
 
-  memcpy (buffer, buffr, size); 
-  printf ("finish copying \n"); 
+    if (l < 0 ) {
+      printf("error reading from socket, error%d\n",errno);
+      perror("meaning:"); exit(0);
+    } 
+
+    memcpy (buffer, buffr, size); 
+  }
   return size;  
 }
 
