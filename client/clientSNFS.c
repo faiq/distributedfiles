@@ -119,7 +119,6 @@ int readFile (int fd, void * buffer) {
   int k;
   char buf[4]; 
   k = recv (socketFd, buf, 4, 0); 
-  printf ("this is the size of the read response should be atleast 5 %d\n", k); 
   if (k < 0 ) {
     printf("error reading from socket, error%d\n",errno);
     perror("meaning:"); exit(0);
@@ -128,7 +127,6 @@ int readFile (int fd, void * buffer) {
   int j; 
   char buff;
   j = recv (socketFd, &buff, 1, 0); // send extra read for id to make the next read to be all our data (for ease)  
-  printf ("this is the id of the read res %d\n", j); 
   if (j < 0 ) {
     printf("error reading from socket, error%d\n",errno);
     perror("meaning:"); exit(0);
@@ -136,7 +134,6 @@ int readFile (int fd, void * buffer) {
  
   int l;
   int size = deserialize_int(buf) - 1; //take out an extra byte for the id
-  printf ("this is the size of the response %d\n", size);
   char buffr[size]; 
   memset (buffr, 0, size);
   if (size) { 
@@ -148,6 +145,8 @@ int readFile (int fd, void * buffer) {
     } 
 
     memcpy (buffer, buffr, size); 
+  } else { 
+    memset(buffer,0,sizeof(buffer));
   }
   return size;  
 }
@@ -250,7 +249,7 @@ int statFile (int fd, fileStat * buf) {
   buf->access_time = deserialize_int (statAccess); 
   buf->mod_time = deserialize_int (statMod);
   
-  printf("%d, %ld, %ld, %ld\n", buf->file_size, buf->creation_time, buf->access_time, buf->mod_time);
+  printf("this is file size %d, this is creation time %ld, access time %ld, mod time %ld\n", buf->file_size, buf->creation_time, buf->access_time, buf->mod_time);
 
   return 1;
 }
