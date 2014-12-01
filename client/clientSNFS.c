@@ -169,14 +169,28 @@ int writeFile(int fd, void * buffer) {
   } 
 
   int k;
-  char buf[5]; 
-  k = read (socketFd, buf, 5); 
+  char buf[4];
+  k = read (socketFd, buf, 4); 
   if (k < 0 ) {
     printf("error reading from socket, error%d\n",errno);
     perror("meaning:"); exit(0);
   } 
 
-  int size = deserialize_int(&buf[1]) - 1; //take out an extra byte for the id
+  int p; 
+  char o;
+  p = read (socketFd, &o, 1); 
+  if (p < 0 ) {
+    printf("error reading from socket, error%d\n",errno);
+    perror("meaning:"); exit(0);
+  } 
+
+  char buff [sizeof(int)]; 
+  int l = read (socketFd, buff, sizeof (int)); 
+  if (l < sizeof(int)) {
+    printf("error reading from socket, error%d\n",errno);
+    perror("meaning:"); exit(0);
+  } 
+  int size = deserialize_int(buff); //take out an extra byte for the id
   return size;
 }
 
@@ -203,52 +217,45 @@ int statFile (int fd, fileStat * buf) {
     printf("error reading from socket, error%d\n",errno);
     perror("meaning:"); exit(0);
   } 
-  
-  int j; 
-  char resId; 
-  j = recv (socketFd, &resId, 1, 0); 
-  if (j < 0 ) {
-    printf("error reading from socket, error%d\n",errno);
-    perror("meaning:"); exit(0);
-  } 
-  
-  int l; 
-  char statSize [4]; 
-  l = recv (socketFd, statSize, 4, 0);
-  if (l < 0 ) {
-    printf("error reading from socket, error%d\n",errno);
-    perror("meaning:"); exit(0);
-  } 
 
-  int x; 
-  char statCreate [4];
-  x = recv (socketFd, statCreate, 4, 0); 
-  if (x < 0 ) {
+  int temp; 
+  char x; 
+  temp = recv (socketFd, &x, 1, 0);
+  if (temp < 1) { 
     printf("error reading from socket, error%d\n",errno);
     perror("meaning:"); exit(0);
-  }
-  
-  int y; 
-  char statAccess [4]; 
-  y = recv (socketFd, statAccess, 4, 0); 
-  if (y < 0 ) {
-    printf("error reading from socket, error%d\n",errno);
-    perror("meaning:"); exit(0);
-  }
-
-  int z; 
-  char statMod [4]; 
-  z = recv (socketFd, statMod, 4, 0); 
-  if (z < 0 ) {
-    printf("error reading from socket, error%d\n",errno);
-    perror("meaning:"); exit(0);
-  }
+  }   
  
+  int sizeRes = deserialize_int (resSize); 
+  char * buffer = malloc (sizeRes * sizeof (char));
+  if (sizeRes != 17) {
+    printf("could not read all bytes from socket\n");
+    exit(0);
+  } 
+
+  int lol;
+  lol = recv (socketFd, buffer, sizeRes - 1, 0);
+  if (lol < sizeRes - 1) { 
+    printf("could not read all bytes from socket\n");
+    exit(0);
+  }
+  
+  char statSize [sizeof(int)]; 
+  char statCreate [sizeof(int)];
+  char statAccess [sizeof(int)]; 
+  char statMod [sizeof(int)]; 
+  
+  memcpy (statSize, buffer, sizeof (int));
+  memcpy (statCreate, buffer + sizeof (int), sizeof (int));
+  memcpy (statAccess, buffer + 2 * sizeof (int), sizeof (int));
+  memcpy (statMod, buffer + 3 * sizeof (int), sizeof (int));
+
   buf->file_size =  deserialize_int (statSize);
   buf->creation_time = deserialize_int (statCreate); 
   buf->access_time = deserialize_int (statAccess); 
   buf->mod_time = deserialize_int (statMod);
-  
+  free (buffer); 
+
   printf("this is file size %d, this is creation time %ld, access time %ld, mod time %ld\n", buf->file_size, buf->creation_time, buf->access_time, buf->mod_time);
 
   return 1;
