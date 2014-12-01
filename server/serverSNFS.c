@@ -162,6 +162,7 @@ int main(int argc, char* argv[]) {
                                 perror("Error: truncate");
                                 break;
                             }
+                            lseek(fd, 0, 0);
                             printf ("Writing to file: %d\n", fd);
                             if ((length = write(fd, &buffer[5], size - 5)) < 0) {
                                 perror("Error: Write");
