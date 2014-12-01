@@ -20,6 +20,7 @@ int main(int argc, char* argv[]) {
     int c;
     char* mount = NULL;
 
+    //get args
     while (1) {
         static struct option long_options[] = {
             {"port", required_argument, 0, 'p'},
@@ -46,6 +47,7 @@ int main(int argc, char* argv[]) {
         }
     }
 
+    //make sure we got all the required args
     if (port == 0 || mount == NULL) {
         printf("Not enough args\n");
         exit(EXIT_FAILURE);
@@ -53,6 +55,8 @@ int main(int argc, char* argv[]) {
     printf("Starting server...\n");
     printf("port: %d\n", port);
     printf("mount: %s\n", mount);
+
+    //create the mount dir if it doesn't already exist
     mkdir(mount, S_IRWXU | S_IRWXG | S_IRWXO);
 
     bzero(&socket_info, sizeof(struct sockaddr_in));
@@ -63,6 +67,7 @@ int main(int argc, char* argv[]) {
         exit(EXIT_FAILURE);
     }
 
+    //create the socket
     if ((socket_handle = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
         close(socket_handle);
         exit(EXIT_FAILURE);
@@ -72,6 +77,7 @@ int main(int argc, char* argv[]) {
     socket_info.sin_addr.s_addr = htonl(INADDR_ANY);
     socket_info.sin_port = htons(port);
 
+    //bind the socket to an address
     if (bind(socket_handle, (struct sockaddr*)&socket_info, sizeof(struct sockaddr_in)) < 0) {
         close(socket_handle);
         perror("bind");
@@ -79,11 +85,13 @@ int main(int argc, char* argv[]) {
     }
     printf("Bound socket\n");
 
+    //mark the socket as a listening socket
     listen(socket_handle, 1);
     printf("Listening on socket\n");
 
     int socket_conn;
     while (1) {
+        //wait for connections
         if ((socket_conn = accept(socket_handle, NULL, NULL)) < 0) {
             close(socket_handle);
             if (errno == EINTR)
@@ -92,18 +100,19 @@ int main(int argc, char* argv[]) {
             exit(EXIT_FAILURE);
         }
         printf("Accepted connection: %d\n", socket_conn);
+        //when one is found, fork a process for it
         switch(fork()) {
             case -1:
+                //shut down on failure
                 perror("fork");
                 close(socket_handle);
                 close(socket_conn);
                 exit(EXIT_FAILURE);
             case 0:
                 while (1) {
+                    //get the first 4 bytes (size of message)
                     char buf[4];
-                    //printf("Trying to recieve bytes\n");
                     int rc = recv(socket_conn, buf, sizeof(buf), 0);
-                    //printf("Recieved %d bytes\n", rc);
                     if (rc < 4)
                         continue;
                     int size = deserialize_int(buf);
@@ -121,31 +130,40 @@ int main(int argc, char* argv[]) {
                     struct stat stat_buf;
                     void* file;
                     byte_buffer response;
+                    //switch on which message is recieved
                     switch (id) {
                         case 0:
+                            //get full filename
                             filename = malloc(strlen(mount) + size + 1);
                             strcpy(filename, mount);
                             strcat(filename, "/");
                             strncat(filename, &buffer[1], size - 1);
                             printf("Opening file: %s\n", filename);
+                            //open file with full permissions (and be sure to truncate)
                             fd = open(filename, O_CREAT | O_RDWR, S_IRWXU | S_IRWXG | S_IRWXO);
+                            //create the buffer to write back to the client
                             init_buf(9, &response);
                             put_int(5, &response);
                             put(0, &response);
                             put_int(fd, &response);
                             printf("Sending fd: %d\n", fd);
+                            //write data back to client
                             sent = send(socket_conn, response.buffer, 9, 0);
                             printf("Sent %d bytes\n", sent);
                             free(response.buffer);
                             break;
                         case 1:
                             printf("Got read message\n");
+                            //get file descriptor
                             fd = deserialize_int(&buffer[1]);
+                            //get the length of the file by lseeking to the end
                             length = lseek(fd, 0, SEEK_END);
                             lseek(fd, 0, 0);
+                            //create a buffer of this length and read everything into it
                             file = malloc(length);
                             printf ("Reading from file: %d\n", fd);
                             read(fd, file, length);
+                            //create the response buffer and write it to the socket
                             init_buf(5+length, &response);
                             put_int(1+length, &response);
                             put(1, &response);
@@ -158,17 +176,19 @@ int main(int argc, char* argv[]) {
                             break;
                         case 2:
                             printf ("Got write message\n");
+                            //get file descriptor and truncate the file
                             fd = deserialize_int(&buffer[1]);
                             if (ftruncate(fd, 0) == -1) {
                                 perror("Error: truncate");
                                 break;
                             }
                             lseek(fd, 0, 0);
+                            //write the data to the file
                             printf ("Writing to file: %d\n", fd);
                             if ((length = write(fd, &buffer[5], size - 5)) < 0) {
                                 perror("Error: Write");
-                                break;
                             }
+                            //return response through socket
                             init_buf(9, &response);
                             put_int(5, &response);
                             put(2, &response);
@@ -179,8 +199,11 @@ int main(int argc, char* argv[]) {
                             free(response.buffer);
                             break;
                         case 3:
+                            //get file descriptor
                             fd = deserialize_int(&buffer[1]);
+                            //stat file
                             fstat(fd, &stat_buf);
+                            //put stat data into buffer and send through socket
                             init_buf(21, &response);
                             put_int(17, &response);
                             put(3, &response);
@@ -197,7 +220,9 @@ int main(int argc, char* argv[]) {
                             free(response.buffer);
                             break;
                         case 4:
+                            //get file descriptor
                             fd = deserialize_int(&buffer[1]);
+                            //close the file and send the response
                             length = close(fd);
                             init_buf(9, &response);
                             put_int(5, &response);
@@ -207,6 +232,7 @@ int main(int argc, char* argv[]) {
                             free(response.buffer);
                             break;
                         case 5:
+                            //close the socket and kill the process
                             close(socket_conn);
                             exit(EXIT_SUCCESS);
                     }
