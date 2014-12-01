@@ -32,7 +32,8 @@ int main (int argc, char ** argv)  {
   statFile (filefd, &stat); 
   char * buffer = malloc (stat.file_size); 
   readFile (filefd, buffer); 
-  writeFile (infd, buffer); 
+  int x = writeFile (infd, buffer); 
+  printf ("%d\n", x);
   statFile (infd, &stat);
   int rfd = openFile ("reverse.in");
   readFile (infd, buffer); 

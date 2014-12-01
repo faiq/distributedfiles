@@ -267,7 +267,6 @@ int statFile (int fd, fileStat * buf) {
   buf->mod_time = deserialize_int (statMod);
   free (buffer); 
   free(send.buffer);
-  printf("this is file size %d, this is creation time %ld, access time %ld, mod time %ld\n", buf->file_size, buf->creation_time, buf->access_time, buf->mod_time);
 
   return 1;
 }
