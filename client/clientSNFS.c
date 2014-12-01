@@ -138,6 +138,7 @@ int readFile (int fd, void * buffer) {
   int size = deserialize_int(buf) - 1; //take out an extra byte for the id
   printf ("this is the size of the response %d\n", size);
   char buffr[size]; 
+  memset (buffr, 0, size);
   if (size) { 
     l = recv (socketFd, buffr, size, 0);
 
