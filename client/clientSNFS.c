@@ -98,6 +98,8 @@ int openFile (char * name) {
       break;
     }
   }
+  free(send.buffer);
+  free(recv.buffer);
   return ret;
 } 
 
@@ -148,6 +150,7 @@ int readFile (int fd, void * buffer) {
   } else { 
     memset(buffer,0,sizeof(buffer));
   }
+  free(send.buffer);
   return size;  
 }
 
@@ -191,6 +194,7 @@ int writeFile(int fd, void * buffer) {
     perror("meaning:"); exit(0);
   } 
   int size = deserialize_int(buff); //take out an extra byte for the id
+  free(send.buffer);
   return size;
 }
 
@@ -255,7 +259,7 @@ int statFile (int fd, fileStat * buf) {
   buf->access_time = deserialize_int (statAccess); 
   buf->mod_time = deserialize_int (statMod);
   free (buffer); 
-
+  free(send.buffer);
   printf("this is file size %d, this is creation time %ld, access time %ld, mod time %ld\n", buf->file_size, buf->creation_time, buf->access_time, buf->mod_time);
 
   return 1;
