@@ -158,12 +158,15 @@ int main(int argc, char* argv[]) {
                         case 2:
                             printf ("Got write message\n");
                             fd = deserialize_int(&buffer[1]);
+                            if (ftruncate(fd, 0) == -1) {
+                                perror("Error: truncate");
+                                break;
+                            }
                             printf ("Writing to file: %d\n", fd);
                             if ((length = write(fd, &buffer[5], size - 5)) < 0) {
                                 perror("Error: Write");
                                 break;
                             }
-                            printf ("here yo \n"); 
                             init_buf(9, &response);
                             put_int(5, &response);
                             put(2, &response);

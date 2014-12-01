@@ -5,3 +5,4 @@ serverSNFS
 clientSNFS
 tmp
 .nfs*
+temp

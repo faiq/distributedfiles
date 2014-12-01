@@ -146,6 +146,7 @@ int readFile (int fd, void * buffer) {
   } 
 
   memcpy (buffer, buffr, size); 
+  printf ("finish copying \n"); 
   return size;  
 }
 

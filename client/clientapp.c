@@ -9,8 +9,7 @@ int main (int argc, char ** argv)  {
   int readRes = readFile (x, buff);
   printf ("this is readRes %d\n", readRes);
   printf ("this is buff %s", buff);
-  int z = writeFile (x, "never gonna give you up, never gonna let you down. never gonna turn around...");
-  printf  (" this is z %d\n", z); 
+  int z = writeFile (x, "How can I find out the size of a file? I opened with an application written in C. I would like to know the size");
   fileStat stuff; 
   int a = statFile(x, &stuff);
   return 0;
