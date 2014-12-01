@@ -163,6 +163,7 @@ int main(int argc, char* argv[]) {
                             file = malloc(length);
                             printf ("Reading from file: %d\n", fd);
                             read(fd, file, length);
+                            printf("Read: %.*s\n", length, file);
                             //create the response buffer and write it to the socket
                             init_buf(5+length, &response);
                             put_int(1+length, &response);
@@ -188,6 +189,7 @@ int main(int argc, char* argv[]) {
                             if ((length = write(fd, &buffer[5], size - 5)) < 0) {
                                 perror("Error: Write");
                             }
+                            printf("Wrote %.*s\n", length, &buffer[5]);
                             //return response through socket
                             init_buf(9, &response);
                             put_int(5, &response);
@@ -233,6 +235,7 @@ int main(int argc, char* argv[]) {
                             break;
                         case 5:
                             //close the socket and kill the process
+                            printf("Closing connection\n");
                             close(socket_conn);
                             exit(EXIT_SUCCESS);
                     }

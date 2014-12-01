@@ -57,9 +57,16 @@ void setServer(char * serverIP, int port) {
 }
 
 int openFile (char * name) {  
-  if (total_open == 0 && connect(socketFd, (struct sockaddr*)&servAddr, sizeof(servAddr)) < 0) {
-    printf("error creating client socket, error%d\n",errno);
-    perror("meaning:"); exit(0);
+  if (total_open == 0) {
+    socketFd = socket (AF_INET, SOCK_STREAM, 0); //create a new socket connection
+    if (socketFd < 0) { 
+      printf("error creating client socket, error%d\n",errno);
+      perror("meaning:"); exit(0);
+    }
+    if (connect(socketFd, (struct sockaddr*)&servAddr, sizeof(servAddr)) < 0) {
+        printf("error creating client socket, error%d\n",errno);
+        perror("meaning:"); exit(0);
+    }
   }
 
   int payloadSize =  sizeof(char) * strlen (name) + sizeof(char); //we send name + 1 byte for id

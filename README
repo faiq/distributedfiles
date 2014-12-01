@@ -1,0 +1,3 @@
+To compile, simply run make. This will produce clientSNFS and serverSNFS executables, and object files. The server is run with ./serverSNFS -port <port> -mount <mountpoint>. The client is run with ./clientSNFS <server> <port> <filename>.
+
+You can also link against client.o to get the functions to interact with the server with.
