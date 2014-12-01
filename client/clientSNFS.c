@@ -8,6 +8,7 @@
 #include <sys/types.h>
 #include <errno.h>
 #include "serialize.h"
+#include "clientSNFS.h"
 
 #define OPEN 0 
 #define READ 1
@@ -36,6 +37,8 @@ static int host2IpAddr(char *anIpName){
    
 }
 
+
+int socketFd; 
 void setServer(char * serverIP, int port) {
   bzero(fds, 256);
   total_open = 0;
@@ -116,7 +119,6 @@ int readFile (int fd, void * buffer) {
   int k;
   char buf[4]; 
   k = recv (socketFd, buf, 4, 0); 
-
   if (k < 0 ) {
     printf("error reading from socket, error%d\n",errno);
     perror("meaning:"); exit(0);
@@ -125,7 +127,6 @@ int readFile (int fd, void * buffer) {
   int j; 
   char buff;
   j = recv (socketFd, &buff, 1, 0); // send extra read for id to make the next read to be all our data (for ease)  
-
   if (j < 0 ) {
     printf("error reading from socket, error%d\n",errno);
     perror("meaning:"); exit(0);
@@ -134,14 +135,19 @@ int readFile (int fd, void * buffer) {
   int l;
   int size = deserialize_int(buf) - 1; //take out an extra byte for the id
   char buffr[size]; 
-  l = recv (socketFd, buffr, size, 0);
-  
-  if (l < 0 ) {
-    printf("error reading from socket, error%d\n",errno);
-    perror("meaning:"); exit(0);
-  } 
+  memset (buffr, 0, size);
+  if (size) { 
+    l = recv (socketFd, buffr, size, 0);
 
-  memcpy (buffer, buffr, size); 
+    if (l < 0 ) {
+      printf("error reading from socket, error%d\n",errno);
+      perror("meaning:"); exit(0);
+    } 
+
+    memcpy (buffer, buffr, size); 
+  } else { 
+    memset(buffer,0,sizeof(buffer));
+  }
   return size;  
 }
 
@@ -157,7 +163,6 @@ int writeFile(int fd, void * buffer) {
   put_string ((char *) buffer, &send);
 
   int n =  write (socketFd, send.buffer, sizeof (int) * 2 + sizeof (char) * (chars + 1)); //size <file><id><fd> 
-  printf ("this is n %d\n", n);
   if (n < 0 )  {
     printf("error writing to socket, error%d\n",errno);
     perror("meaning:"); exit(0);
@@ -175,35 +180,109 @@ int writeFile(int fd, void * buffer) {
   return size;
 }
 
+
+int statFile (int fd, fileStat * buf) { 
+  int payloadSize = sizeof(int) + sizeof(char); //msg = <size><id><fd>
+  byte_buffer send; 
+
+  init_buf (payloadSize + sizeof(int), &send);
+  put_int (payloadSize, &send);
+  put (STAT, &send);
+  put_int (fd, &send);
+
+  int n =  write (socketFd, send.buffer, sizeof (int) * 2 + sizeof (char)); //size <file><id><fd> 
+  if (n < 0 )  {
+    printf("error writing to socket, error%d\n",errno);
+    perror("meaning:"); exit(0);
+  }
+
+  int k;                                              /*gets the size of the response*/ 
+  char resSize[4]; 
+  k = recv (socketFd, resSize, 4, 0); 
+  if (k < 0 ) {
+    printf("error reading from socket, error%d\n",errno);
+    perror("meaning:"); exit(0);
+  } 
+  
+  int j; 
+  char resId; 
+  j = recv (socketFd, &resId, 1, 0); 
+  if (j < 0 ) {
+    printf("error reading from socket, error%d\n",errno);
+    perror("meaning:"); exit(0);
+  } 
+  
+  int l; 
+  char statSize [4]; 
+  l = recv (socketFd, statSize, 4, 0);
+  if (l < 0 ) {
+    printf("error reading from socket, error%d\n",errno);
+    perror("meaning:"); exit(0);
+  } 
+
+  int x; 
+  char statCreate [4];
+  x = recv (socketFd, statCreate, 4, 0); 
+  if (x < 0 ) {
+    printf("error reading from socket, error%d\n",errno);
+    perror("meaning:"); exit(0);
+  }
+  
+  int y; 
+  char statAccess [4]; 
+  y = recv (socketFd, statAccess, 4, 0); 
+  if (y < 0 ) {
+    printf("error reading from socket, error%d\n",errno);
+    perror("meaning:"); exit(0);
+  }
+
+  int z; 
+  char statMod [4]; 
+  z = recv (socketFd, statMod, 4, 0); 
+  if (z < 0 ) {
+    printf("error reading from socket, error%d\n",errno);
+    perror("meaning:"); exit(0);
+  }
+ 
+  buf->file_size =  deserialize_int (statSize);
+  buf->creation_time = deserialize_int (statCreate); 
+  buf->access_time = deserialize_int (statAccess); 
+  buf->mod_time = deserialize_int (statMod);
+  
+  printf("this is file size %d, this is creation time %ld, access time %ld, mod time %ld\n", buf->file_size, buf->creation_time, buf->access_time, buf->mod_time);
+
+  return 1;
+}
+
 int closeFile(int fd) {
-    int i;
-    for (i = 0; i < 256; i++) {
-        if (fds[i] == fd) {
-            fds[i] = 0;
-            total_open--;
-            break;
-        }
-    }
-    byte_buffer send;
-    init_buf(9, &send);
-    put_int(5, &send);
-    put(4, &send);
-    put_int(fd, &send);
-    write(socketFd, send.buffer, 9);
-    char size_buf[4];
-    recv(socketFd, size_buf, 4, 0);
-    int size = deserialize_int(size_buf);
-    char* buffer = malloc(size);
-    recv(socketFd, buffer, size, 0);
-    int response = deserialize_int(&buffer[1]);
-    free(send.buffer);
-    if (total_open == 0) {
-        init_buf(5, &send);
-        put_int(1, &send);
-        put(5, &send);
-        write(socketFd, send.buffer, 5);
-        free(send.buffer);
-        close(socketFd);
-    }
-    return response;
+  int i;
+  for (i = 0; i < 256; i++) {
+      if (fds[i] == fd) {
+          fds[i] = 0;
+          total_open--;
+          break;
+      }
+  }
+  byte_buffer send;
+  init_buf(9, &send);
+  put_int(5, &send);
+  put(4, &send);
+  put_int(fd, &send);
+  write(socketFd, send.buffer, 9);
+  char size_buf[4];
+  recv(socketFd, size_buf, 4, 0);
+  int size = deserialize_int(size_buf);
+  char* buffer = malloc(size);
+  recv(socketFd, buffer, size, 0);
+  int response = deserialize_int(&buffer[1]);
+  free(send.buffer);
+  if (total_open == 0) {
+      init_buf(5, &send);
+      put_int(1, &send);
+      put(5, &send);
+      write(socketFd, send.buffer, 5);
+      free(send.buffer);
+      close(socketFd);
+  }
+  return response;
 }
