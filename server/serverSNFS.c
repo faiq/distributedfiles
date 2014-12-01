@@ -188,6 +188,11 @@ int main(int argc, char* argv[]) {
                             put_int(stat_buf.st_ctim.tv_sec, &response);
                             put_int(stat_buf.st_atim.tv_sec, &response);
                             put_int(stat_buf.st_mtim.tv_sec, &response);
+                            printf("Sending size: %d, ctime: %d, atime: %d, mtime: %d\n",
+                                    deserialize_int(&response.buffer[5]),
+                                    deserialize_int(&response.buffer[9]),
+                                    deserialize_int(&response.buffer[13]),
+                                    deserialize_int(&response.buffer[17]));
                             send(socket_conn, response.buffer, 21, 0);
                             free(response.buffer);
                             break;
